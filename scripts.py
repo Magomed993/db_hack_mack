@@ -37,23 +37,23 @@ COMMENDATIONS = [
 
 
 def fix_marks(schoolkid_name):
-    schoolkid = Schoolkid.objects.filter(full_name__contains=schoolkid_name)
+    schoolkid = Schoolkid.objects.filter(full_name__contains=schoolkid_name, year_of_study=6, group_letter="А")
     child = schoolkid[0]
     marks_child = Mark.objects.filter(schoolkid=child, points__in=[2, 3])
     marks_child.update(points=5)
 
 
 def remove_chastisements(schoolkid_name):
-    schoolkid = Schoolkid.objects.filter(full_name__contains=schoolkid_name)
+    schoolkid = Schoolkid.objects.filter(full_name__contains=schoolkid_name, year_of_study=6, group_letter="А")
     child = schoolkid[0]
     chastisement = Chastisement.objects.filter(schoolkid=child)
     chastisement.delete()
 
 
 def create_commendation(schoolkid_name, subject):
-    schoolkid = Schoolkid.objects.filter(full_name__contains=schoolkid_name)
+    schoolkid = Schoolkid.objects.filter(full_name__contains=schoolkid_name, year_of_study=6, group_letter="А")
     child = schoolkid[0]
-    lesson = Lesson.objects.filter(year_of_study=6, group_letter="А", subject__title=subject)
+    lesson = Lesson.objects.filter(subject__title=subject)
     random_commendations = random.choice(COMMENDATIONS)
     Commendation.objects.create(text=random_commendations, created=lesson[0].date,
                                 schoolkid=child, subject=lesson_6a[0].subject,
@@ -62,7 +62,7 @@ def create_commendation(schoolkid_name, subject):
 
 def checks_pupil(schoolkid_name):
     try:
-        schoolkid = Schoolkid.objects.get(full_name__contains=schoolkid_name)
+        schoolkid = Schoolkid.objects.get(full_name__contains=schoolkid_name, year_of_study=6, group_letter="А")
         return schoolkid
     except MultipleObjectsReturned:
         print("Найдено несколько учеников с таким же именем")
