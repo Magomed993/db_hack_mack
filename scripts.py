@@ -47,11 +47,11 @@ def remove_chastisements(schoolkid_name):
 
 
 def create_commendation(schoolkid_name, subject):
-    lesson = Lesson.objects.filter(subject__title=subject)
+    lesson = Lesson.objects.filter(subject__title=subject, year_of_study=6, group_letter="А").order_by("subject")
     random_commendations = random.choice(COMMENDATIONS)
-    Commendation.objects.create(text=random_commendations, created=lesson[0].date,
-                                schoolkid=checks_pupil(schoolkid_name), subject=lesson_6a[0].subject,
-                                teacher=lesson_6a[0].teacher)
+    Commendation.objects.create(text=random_commendations, created=lesson.first().date,
+                                schoolkid=checks_pupil(schoolkid_name), subject=lesson.first().subject,
+                                teacher=lesson.first().teacher)
 
 
 def checks_pupil(schoolkid_name):
