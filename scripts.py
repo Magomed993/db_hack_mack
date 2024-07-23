@@ -37,26 +37,20 @@ COMMENDATIONS = [
 
 
 def fix_marks(schoolkid_name):
-    schoolkid = Schoolkid.objects.filter(full_name__contains=schoolkid_name, year_of_study=6, group_letter="А")
-    child = schoolkid[0]
-    marks_child = Mark.objects.filter(schoolkid=child, points__in=[2, 3])
+    marks_child = Mark.objects.filter(schoolkid=checks_pupil(schoolkid_name), points__in=[2, 3])
     marks_child.update(points=5)
 
 
 def remove_chastisements(schoolkid_name):
-    schoolkid = Schoolkid.objects.filter(full_name__contains=schoolkid_name, year_of_study=6, group_letter="А")
-    child = schoolkid[0]
-    chastisement = Chastisement.objects.filter(schoolkid=child)
+    chastisement = Chastisement.objects.filter(schoolkid=checks_pupil(schoolkid_name))
     chastisement.delete()
 
 
 def create_commendation(schoolkid_name, subject):
-    schoolkid = Schoolkid.objects.filter(full_name__contains=schoolkid_name, year_of_study=6, group_letter="А")
-    child = schoolkid[0]
     lesson = Lesson.objects.filter(subject__title=subject)
     random_commendations = random.choice(COMMENDATIONS)
     Commendation.objects.create(text=random_commendations, created=lesson[0].date,
-                                schoolkid=child, subject=lesson_6a[0].subject,
+                                schoolkid=checks_pupil(schoolkid_name), subject=lesson_6a[0].subject,
                                 teacher=lesson_6a[0].teacher)
 
 
@@ -66,5 +60,5 @@ def checks_pupil(schoolkid_name):
         return schoolkid
     except MultipleObjectsReturned:
         print("Найдено несколько учеников с таким же именем")
-    except ObjectDoesNotExist:
+    except DoesNotExist:
         print("Ученик с таким именем не найден")
