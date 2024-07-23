@@ -17,27 +17,39 @@ Python 3.11.4 должен быть уже установлен.
 
 Все функции запускать в командной строке `shell`  командой `python manage.py shell`
 ***
-1. Данный скрипт производит исправление в базе данных оценок ученика с 2 и 3 на 5.
+1. Проверка на правильность написания ФИО ученика, а также на возможность повторения.
+```Python
+def checks_pupil(schoolkid_name):
+    try:
+        schoolkid = Schoolkid.objects.get(full_name__contains=schoolkid_name, year_of_study=6, group_letter="А")
+        return schoolkid
+    except Schoolkid.MultipleObjectsReturned:
+        print("Найдено несколько учеников с таким же именем")
+    except Schoolkid.DoesNotExist:
+        print("Ученик с таким именем не найден")
+```
+    Запускается посредством копирования в командную строку `shell` и запускается: 
+```
+checks_pupil("ФИО школьника")
+```
+***
+2. Данный скрипт производит исправление в базе данных оценок ученика с 2 и 3 на 5.
 ``` Python
 from datacenter.models import Schoolkid, Mark, Chastisement, Lesson
 def fix_marks(schoolkid_name):
-    schoolkid = Schoolkid.objects.filter(full_name__contains=schoolkid_name)
-    child = schoolkid[0]
-    mark_child = Mark.objects.filter(schoolkid=child, points__in=[2, 3])
-    mark_child.update(points=5)
+    marks_child = Mark.objects.filter(schoolkid=checks_pupil(schoolkid_name), points__in=[2, 3])
+    marks_child.update(points=5)
 ```
     Запускается посредством копирования в командную строку `shell` и запускается: 
 ```
 fix_marks("ФИО школьника")
 ```
 ***
-2. Полное удаление замечаний на ученика.
+3. Полное удаление замечаний на ученика.
 ```Python
 from datacenter.models import Schoolkid, Mark, Chastisement, Lesson
 def remove_chastisements(schoolkid_name):
-    schoolkid = Schoolkid.objects.filter(full_name__contains=schoolkid_name)
-    child = schoolkid[0]
-    chastisement = Chastisement.objects.filter(schoolkid=child)
+    chastisement = Chastisement.objects.filter(schoolkid=checks_pupil(schoolkid_name))
     chastisement.delete()
 ```
     Запускается посредством копирования в командную строку `shell` и запускается: 
@@ -45,38 +57,20 @@ def remove_chastisements(schoolkid_name):
 remove_chastisements("ФИО школьника")
 ```
 ***
-3. Данный скрипт отмечает похвалу в базе данных ученика.
+4. Данный скрипт отмечает похвалу в базе данных ученика.
 ```Python
 import random
 from datacenter.models import Schoolkid, Mark, Chastisement, Lesson
 def create_commendation(schoolkid_name, subject):
-    schoolkid = Schoolkid.objects.filter(full_name__contains=schoolkid_name)
-    child = schoolkid[0]
-    lesson = Lesson.objects.filter(year_of_study=6, group_letter="А", subject__title=subject)
+    lesson = Lesson.objects.filter(subject__title=subject, year_of_study=6, group_letter="А").order_by("subject")
     random_commendations = random.choice(COMMENDATIONS)
-    Commendation.objects.create(text=random_commendations, created=lesson[0].date,
-                                schoolkid=child, subject=lesson_6a[0].subject,
-                                teacher=lesson_6a[0].teacher)
+    Commendation.objects.create(text=random_commendations, created=lesson.first().date,
+                                schoolkid=checks_pupil(schoolkid_name), subject=lesson.first().subject,
+                                teacher=lesson.first().teacher)
 ```
     Запускается посредством копирования в командную строку `shell` и запускается: 
 ```
 create_commendation("ФИО школьника", "Предмет")
-```
-***
-4. Проверка на правильность написания ФИО ученика. В случае, если будет ошибка на других скриптах, то данный скрипт пояснит в чем она заключается.
-```Python
-def checks_pupil(schoolkid_name):
-    try:
-        schoolkid = Schoolkid.objects.get(full_name__contains=schoolkid_name)
-        return schoolkid
-    except MultipleObjectsReturned:
-        print("Найдено несколько учеников с таким же именем")
-    except ObjectDoesNotExist:
-        print("Ученик с таким именем не найден")
-```
-    Запускается посредством копирования в командную строку `shell` и запускается: 
-```
-checks_pupil("ФИО школьника")
 ```
 ***
 ### Цель проекта
