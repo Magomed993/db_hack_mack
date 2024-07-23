@@ -58,7 +58,7 @@ def checks_pupil(schoolkid_name):
     try:
         schoolkid = Schoolkid.objects.get(full_name__contains=schoolkid_name, year_of_study=6, group_letter="А")
         return schoolkid
-    except MultipleObjectsReturned:
+    except Schoolkid.MultipleObjectsReturned:
         print("Найдено несколько учеников с таким же именем")
-    except DoesNotExist:
+    except Schoolkid.DoesNotExist:
         print("Ученик с таким именем не найден")
