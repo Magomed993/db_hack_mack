@@ -62,7 +62,8 @@ remove_chastisements("ФИО школьника")
 import random
 from datacenter.models import Schoolkid, Mark, Chastisement, Lesson
 def create_commendation(schoolkid_name, subject):
-    lesson = Lesson.objects.filter(subject__title=subject, year_of_study=6, group_letter="А").order_by("subject")
+    lesson = Lesson.objects.filter(subject__title=subject, year_of_study=checks_pupil(schoolkid_name).year_of_study,
+                                   group_letter=checks_pupil(schoolkid_name).group_letter).order_by("subject")
     random_commendations = random.choice(COMMENDATIONS)
     Commendation.objects.create(text=random_commendations, created=lesson.first().date,
                                 schoolkid=checks_pupil(schoolkid_name), subject=lesson.first().subject,
