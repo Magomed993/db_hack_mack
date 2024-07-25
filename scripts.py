@@ -1,5 +1,5 @@
 import random
-from datacenter.models import Schoolkid, Mark, Chastisement, Lesson
+from datacenter.models import Schoolkid, Mark, Chastisement, Lesson, Commendation
 
 
 COMMENDATIONS = [
@@ -37,22 +37,30 @@ COMMENDATIONS = [
 
 
 def fix_marks(schoolkid_name):
-    marks_child = Mark.objects.filter(schoolkid=checks_pupil(schoolkid_name), points__in=[2, 3])
-    marks_child.update(points=5)
+    schoolkid = checks_pupil(schoolkid_name)
+    if schoolkid:
+        marks_child = Mark.objects.filter(schoolkid=schoolkid, points__in=[2, 3])
+        marks_child.update(points=5)
 
 
 def remove_chastisements(schoolkid_name):
-    chastisement = Chastisement.objects.filter(schoolkid=checks_pupil(schoolkid_name))
-    chastisement.delete()
+    schoolkid = checks_pupil(schoolkid_name)
+    if schoolkid:
+        chastisement = Chastisement.objects.filter(schoolkid=schoolkid)
+        chastisement.delete()
 
 
 def create_commendation(schoolkid_name, subject):
-    lesson = Lesson.objects.filter(subject__title=subject, year_of_study=checks_pupil(schoolkid_name).year_of_study,
-                                   group_letter=checks_pupil(schoolkid_name).group_letter).order_by("subject")
-    random_commendations = random.choice(COMMENDATIONS)
-    Commendation.objects.create(text=random_commendations, created=lesson.first().date,
-                                schoolkid=checks_pupil(schoolkid_name), subject=lesson.first().subject,
-                                teacher=lesson.first().teacher)
+    schoolkid = checks_pupil(schoolkid_name)
+    if schoolkid:
+        lesson = Lesson.objects.filter(subject__title=subject, year_of_study=schoolkid.year_of_study,
+                                       group_letter=schoolkid.group_letter).order_by("subject").first()
+        if lesson is None:
+            print('Данного урока не найдено')
+        else:
+            random_commendations = random.choice(COMMENDATIONS)
+            Commendation.objects.create(text=random_commendations, created=lesson.date, schoolkid=schoolkid,
+                                        subject=lesson.subject, teacher=lesson.teacher)
 
 
 def checks_pupil(schoolkid_name):

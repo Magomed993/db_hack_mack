@@ -19,6 +19,7 @@ Python 3.11.4 должен быть уже установлен.
 ***
 1. Проверка на правильность написания ФИО ученика, а также на возможность повторения.
 ```Python
+from datacenter.models import Schoolkid, Mark, Chastisement, Lesson, Commendation
 def checks_pupil(schoolkid_name):
     try:
         schoolkid = Schoolkid.objects.get(full_name__contains=schoolkid_name, year_of_study=6, group_letter="А")
@@ -35,10 +36,12 @@ checks_pupil("ФИО школьника")
 ***
 2. Данный скрипт производит исправление в базе данных оценок ученика с 2 и 3 на 5.
 ``` Python
-from datacenter.models import Schoolkid, Mark, Chastisement, Lesson
+from datacenter.models import Schoolkid, Mark, Chastisement, Lesson, Commendation
 def fix_marks(schoolkid_name):
-    marks_child = Mark.objects.filter(schoolkid=checks_pupil(schoolkid_name), points__in=[2, 3])
-    marks_child.update(points=5)
+    schoolkid = checks_pupil(schoolkid_name)
+    if schoolkid:
+        marks_child = Mark.objects.filter(schoolkid=schoolkid, points__in=[2, 3])
+        marks_child.update(points=5)
 ```
     Запускается посредством копирования в командную строку `shell` и запускается: 
 ```
@@ -47,10 +50,12 @@ fix_marks("ФИО школьника")
 ***
 3. Полное удаление замечаний на ученика.
 ```Python
-from datacenter.models import Schoolkid, Mark, Chastisement, Lesson
+from datacenter.models import Schoolkid, Mark, Chastisement, Lesson, Commendation
 def remove_chastisements(schoolkid_name):
-    chastisement = Chastisement.objects.filter(schoolkid=checks_pupil(schoolkid_name))
-    chastisement.delete()
+    schoolkid = checks_pupil(schoolkid_name)
+    if schoolkid:
+        chastisement = Chastisement.objects.filter(schoolkid=schoolkid)
+        chastisement.delete()
 ```
     Запускается посредством копирования в командную строку `shell` и запускается: 
 ```
@@ -62,12 +67,16 @@ remove_chastisements("ФИО школьника")
 import random
 from datacenter.models import Schoolkid, Mark, Chastisement, Lesson
 def create_commendation(schoolkid_name, subject):
-    lesson = Lesson.objects.filter(subject__title=subject, year_of_study=checks_pupil(schoolkid_name).year_of_study,
-                                   group_letter=checks_pupil(schoolkid_name).group_letter).order_by("subject")
-    random_commendations = random.choice(COMMENDATIONS)
-    Commendation.objects.create(text=random_commendations, created=lesson.first().date,
-                                schoolkid=checks_pupil(schoolkid_name), subject=lesson.first().subject,
-                                teacher=lesson.first().teacher)
+    schoolkid = checks_pupil(schoolkid_name)
+    if schoolkid:
+        lesson = Lesson.objects.filter(subject__title=subject, year_of_study=schoolkid.year_of_study,
+                                       group_letter=schoolkid.group_letter).order_by("subject").first()
+        if lesson is None:
+            print('Данного урока не найдено')
+        else:
+            random_commendations = random.choice(COMMENDATIONS)
+            Commendation.objects.create(text=random_commendations, created=lesson.date, schoolkid=schoolkid,
+                                        subject=lesson.subject, teacher=lesson.teacher)
 ```
     Запускается посредством копирования в командную строку `shell` и запускается: 
 ```
